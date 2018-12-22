@@ -5,17 +5,15 @@ android {
     //noinspection GroovyAssignabilityCheck
     compileSdkVersion rootProject.ext.compileSdkVersion
     //noinspection GroovyAssignabilityCheck
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
-    lintOptions {
-        abortOnError false
-    }
     defaultConfig {
         applicationId "tv.danmaku.ijk.media.example"
         minSdkVersion 9
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
+        //坑爹的地方
+        flavorDimensions "versionCode"
     }
     buildTypes {
         release {

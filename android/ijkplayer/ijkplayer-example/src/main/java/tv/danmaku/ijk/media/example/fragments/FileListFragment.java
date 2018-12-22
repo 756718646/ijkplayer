@@ -19,6 +19,7 @@ package tv.danmaku.ijk.media.example.fragments;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -27,20 +28,26 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.util.List;
 
 import tv.danmaku.ijk.media.example.R;
 import tv.danmaku.ijk.media.example.content.PathCursor;
 import tv.danmaku.ijk.media.example.content.PathCursorLoader;
 import tv.danmaku.ijk.media.example.eventbus.FileExplorerEvents;
+import tv.danmaku.ijk.media.example.tem.FileUtil;
+import tv.danmaku.ijk.media.example.tem.Video;
 
 public class FileListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String ARG_PATH = "path";
@@ -49,6 +56,8 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
     private ListView mFileListView;
     private VideoAdapter mAdapter;
     private String mPath;
+
+    private FileUtil fileUtil;
 
     public static FileListFragment newInstance(String path) {
         FileListFragment f = new FileListFragment();
@@ -64,11 +73,25 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_file_list, container, false);
+        final ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_file_list, container, false);
         mPathView = (TextView) viewGroup.findViewById(R.id.path_view);
         mFileListView = (ListView) viewGroup.findViewById(R.id.file_list_view);
 
         mPathView.setVisibility(View.VISIBLE);
+
+        viewGroup.findViewById(R.id.select_file).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditText e = viewGroup.findViewById(R.id.index_edit);
+//                selectFile();
+                List<Video> rs = fileUtil.getVideos();
+                Toast.makeText(getContext(),""+rs.size(),Toast.LENGTH_SHORT).show();
+//                for (Video item : rs){
+//                    Log.v("video","视频路径:"+item.getPath());
+//                }
+                FileExplorerEvents.getBus().post(new FileExplorerEvents.OnClickFile(rs.get(Integer.valueOf(e.getText().toString())).getPath()));
+            }
+        });
 
         return viewGroup;
     }
@@ -86,6 +109,7 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
             mPathView.setText(mPath);
         }
 
+        fileUtil = new FileUtil(activity);
         mAdapter = new VideoAdapter(activity);
         mFileListView.setAdapter(mAdapter);
         mFileListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -208,4 +232,14 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
             return cursor.getString(PathCursor.CI_FILE_PATH);
         }
     }
+
+
+    private void selectFile(){
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("video/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(intent,1);
+
+    }
+
 }

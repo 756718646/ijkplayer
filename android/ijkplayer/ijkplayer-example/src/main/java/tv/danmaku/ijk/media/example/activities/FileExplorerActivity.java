@@ -17,10 +17,17 @@
 
 package tv.danmaku.ijk.media.example.activities;
 
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 
@@ -93,7 +100,60 @@ public class FileExplorerActivity extends AppActivity {
             mSettings.setLastDirectory(path);
             doOpenDirectory(path, true);
         } else if (f.exists()) {
+            Toast.makeText(this,"选择:"+f.toString(),Toast.LENGTH_SHORT).show();
             VideoActivity.intentTo(this, f.getPath(), f.getName());
         }
     }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Toast.makeText(this,"111",Toast.LENGTH_SHORT).show();
+
+//        if (resultCode == Activity.RESULT_OK) {
+//            if (requestCode == 1) {
+//                Uri uri = data.getData();
+//                Toast.makeText(this, "文件路径："+uri.getPath().toString(), Toast.LENGTH_SHORT).show();
+//            }
+//        }
+        if (data==null)return;
+        if (data.getData()==null)return;
+//        String s = getRealPathFromURI(this,data.getData());
+        String s = getFilePathFromContentUri(data.getData(),this.getContentResolver());
+        if (TextUtils.isEmpty(s))return;
+        File f = new File(s);
+        VideoActivity.intentTo(this, f.getPath(), f.getName());
+
+    }
+
+    //
+    //content://com.android.providers.media.documents/document/video%3A1560433
+    public static String getRealPathFromURI(Activity activity,Uri contentUri) {
+        String res = null;
+        String[] proj = { MediaStore.Images.Media.DATA };
+        Cursor cursor = activity.getContentResolver().query(contentUri, proj, null, null, null);
+        if(cursor==null)return null;
+        if(cursor.moveToFirst()){;
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            res = cursor.getString(column_index);
+        }
+        cursor.close();
+        return res;
+    }
+
+    public static String getFilePathFromContentUri(Uri selectedVideoUri,
+                                                   ContentResolver contentResolver) {
+        String filePath;
+        String[] filePathColumn = {MediaStore.MediaColumns.DATA};
+
+        Cursor cursor = contentResolver.query(selectedVideoUri, filePathColumn, null, null, null);
+//      也可用下面的方法拿到cursor
+//      Cursor cursor = this.context.managedQuery(selectedVideoUri, filePathColumn, null, null, null);
+
+        cursor.moveToFirst();
+
+        int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+        filePath = cursor.getString(columnIndex);
+        cursor.close();
+        return filePath;
+    }
+
 }
