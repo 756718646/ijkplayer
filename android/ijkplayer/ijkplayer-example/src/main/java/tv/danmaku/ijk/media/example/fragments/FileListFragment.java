@@ -27,6 +27,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -40,6 +42,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import tv.danmaku.ijk.media.example.R;
@@ -48,17 +51,33 @@ import tv.danmaku.ijk.media.example.content.PathCursorLoader;
 import tv.danmaku.ijk.media.example.eventbus.FileExplorerEvents;
 import tv.danmaku.ijk.media.example.tem.FileUtil;
 import tv.danmaku.ijk.media.example.tem.Video;
+import tv.danmaku.ijk.media.example.widget.adapter.BaseAdapter;
+import tv.danmaku.ijk.media.example.widget.adapter.BaseHolder;
 
+/**
+ * 文件列表fragment
+ */
 public class FileListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String ARG_PATH = "path";
 
+    private static final String TAG = "FileListFragment";
+
     private TextView mPathView;
-    private ListView mFileListView;
+    private RecyclerView mFileListView;
     private VideoAdapter mAdapter;
     private String mPath;
 
+    private List<Video> videos = new ArrayList<>();//视频源
+
     private FileUtil fileUtil;
 
+    private EditText editView;
+
+    /**
+     * 创建时候，放入根目录
+     * @param path
+     * @return
+     */
     public static FileListFragment newInstance(String path) {
         FileListFragment f = new FileListFragment();
 
@@ -75,21 +94,33 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_file_list, container, false);
         mPathView = (TextView) viewGroup.findViewById(R.id.path_view);
-        mFileListView = (ListView) viewGroup.findViewById(R.id.file_list_view);
-
+        mFileListView = (RecyclerView) viewGroup.findViewById(R.id.file_list_view);
+        editView = viewGroup.findViewById(R.id.index_edit);
         mPathView.setVisibility(View.VISIBLE);
 
-        viewGroup.findViewById(R.id.select_file).setOnClickListener(new View.OnClickListener() {
+        //加载数据
+        viewGroup.findViewById(R.id.test).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText e = viewGroup.findViewById(R.id.index_edit);
-//                selectFile();
                 List<Video> rs = fileUtil.getVideos();
-                Toast.makeText(getContext(),""+rs.size(),Toast.LENGTH_SHORT).show();
-//                for (Video item : rs){
-//                    Log.v("video","视频路径:"+item.getPath());
-//                }
-                FileExplorerEvents.getBus().post(new FileExplorerEvents.OnClickFile(rs.get(Integer.valueOf(e.getText().toString())).getPath()));
+                videos.clear();
+                videos.addAll(rs);
+                mAdapter.notifyDataSetChanged();
+                Log.v(TAG,"测试按钮点击");
+                Toast.makeText(getContext(),"获取数据:"+rs.size(),Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        //点击确定播放文件
+        viewGroup.findViewById(R.id.btn_play).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String path = editView.getText().toString();
+                if (TextUtils.isEmpty(path)){
+                    Toast.makeText(getContext(),"请输入文件路径",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                FileExplorerEvents.getBus().post(new FileExplorerEvents.OnClickFile(path));
             }
         });
 
@@ -110,18 +141,9 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
         }
 
         fileUtil = new FileUtil(activity);
-        mAdapter = new VideoAdapter(activity);
+        mAdapter = new VideoAdapter(videos);
         mFileListView.setAdapter(mAdapter);
-        mFileListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, final int position, final long id) {
-                String path = mAdapter.getFilePath(position);
-                if (TextUtils.isEmpty(path))
-                    return;
-                FileExplorerEvents.getBus().post(new FileExplorerEvents.OnClickFile(path));
-            }
-        });
-
+        mFileListView.setLayoutManager(new LinearLayoutManager(getContext()));
         getLoaderManager().initLoader(1, null, this);
     }
 
@@ -134,7 +156,6 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mAdapter.swapCursor(data);
         mAdapter.notifyDataSetChanged();
     }
 
@@ -143,103 +164,38 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
 
     }
 
-    final class VideoAdapter extends SimpleCursorAdapter {
-        final class ViewHolder {
-            public ImageView iconImageView;
-            public TextView nameTextView;
-        }
+    class VideoAdapter extends BaseAdapter<Video> implements View.OnClickListener {
 
-        public VideoAdapter(Context context) {
-            super(context, android.R.layout.simple_list_item_2, null,
-                    new String[]{PathCursor.CN_FILE_NAME, PathCursor.CN_FILE_PATH},
-                    new int[]{android.R.id.text1, android.R.id.text2}, 0);
+        public VideoAdapter(List<Video> data) {
+            super(android.R.layout.simple_list_item_2,data);
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            if (view == null) {
-                LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-                view = inflater.inflate(R.layout.fragment_file_list_item, parent, false);
-            }
-
-            ViewHolder viewHolder = (ViewHolder) view.getTag();
-            if (viewHolder == null) {
-                viewHolder = new ViewHolder();
-                viewHolder.iconImageView = (ImageView) view.findViewById(R.id.icon);
-                viewHolder.nameTextView = (TextView) view.findViewById(R.id.name);
-            }
-
-            if (isDirectory(position)) {
-                viewHolder.iconImageView.setImageResource(R.drawable.ic_theme_folder);
-            } else if (isVideo(position)) {
-                viewHolder.iconImageView.setImageResource(R.drawable.ic_theme_play_arrow);
-            } else {
-                viewHolder.iconImageView.setImageResource(R.drawable.ic_theme_description);
-            }
-            viewHolder.nameTextView.setText(getFileName(position));
-
-            return view;
+        protected void convert(BaseHolder helper, Video item) {
+            TextView text1 = helper.getView(android.R.id.text1);
+            TextView text2 = helper.getView(android.R.id.text2);
+            text1.setText(item.getName());
+            text2.setText(item.getPath());
+            helper.itemView.setOnClickListener(this);
+            helper.itemView.setTag(R.id.tag_index,helper.getAdapterPosition());
         }
 
         @Override
-        public long getItemId(int position) {
-            final Cursor cursor = moveToPosition(position);
-            if (cursor == null)
-                return 0;
-
-            return cursor.getLong(PathCursor.CI_ID);
-        }
-
-        Cursor moveToPosition(int position) {
-            final Cursor cursor = getCursor();
-            if (cursor.getCount() == 0 || position >= cursor.getCount()) {
-                return null;
-            }
-            cursor.moveToPosition(position);
-            return cursor;
-        }
-
-        public boolean isDirectory(int position) {
-            final Cursor cursor = moveToPosition(position);
-            if (cursor == null)
-                return true;
-
-            return cursor.getInt(PathCursor.CI_IS_DIRECTORY) != 0;
-        }
-
-        public boolean isVideo(int position) {
-            final Cursor cursor = moveToPosition(position);
-            if (cursor == null)
-                return true;
-
-            return cursor.getInt(PathCursor.CI_IS_VIDEO) != 0;
-        }
-
-        public String getFileName(int position) {
-            final Cursor cursor = moveToPosition(position);
-            if (cursor == null)
-                return "";
-
-            return cursor.getString(PathCursor.CI_FILE_NAME);
-        }
-
-        public String getFilePath(int position) {
-            final Cursor cursor = moveToPosition(position);
-            if (cursor == null)
-                return "";
-
-            return cursor.getString(PathCursor.CI_FILE_PATH);
+        public void onClick(View v) {
+            int index = (int) v.getTag(R.id.tag_index);
+            Video video = videos.get(index);
+            editView.setText(video.getPath());
         }
     }
 
-
+    /**
+     * 跳转到选择文件
+     */
     private void selectFile(){
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("video/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         startActivityForResult(intent,1);
-
     }
 
 }

@@ -9,21 +9,41 @@
     android:paddingTop="0dp">
 
 
+
     <EditText
         android:id="@+id/index_edit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:singleLine="true"
-        android:inputType="number"
-        android:text="1"/>
+        android:inputType="text"
+        android:text="请填写播放的文件"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/test"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="加载视频列表"/>
+
+        <Button
+            android:id="@+id/btn_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="播放"/>
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/select_file"
         android:clickable="true"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#0f0"
-        android:text="选择文件"/>
+        android:text="在输入框填写路径，选择文件"/>
 
     <EditText
         android:id="@+id/path_view"
@@ -35,7 +55,7 @@
         android:visibility="gone"
         android:lines="1" />
 
-    <ListView
+    <android.support.v7.widget.RecyclerView
         android:id="@+id/file_list_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

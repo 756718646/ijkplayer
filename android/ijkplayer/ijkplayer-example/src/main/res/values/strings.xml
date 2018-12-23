@@ -77,4 +77,13 @@
         <item>IjkExoMediaPlayer</item>
     </string-array>
 
+    <item name="tag_first" type="id"></item>
+    <item name="tag_second" type="id"></item>
+    <item name="tag_three" type="id"></item>
+    <item name="tag_index" type="id"></item>
+    <item name="tag_url" type="id"></item>
+
+    <item name="tag_data" type="id"></item>
+    <item name="tag_img_index" type="id"></item>
+
 </resources>

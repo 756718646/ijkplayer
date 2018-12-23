@@ -40,6 +40,9 @@ import tv.danmaku.ijk.media.example.application.Settings;
 import tv.danmaku.ijk.media.example.eventbus.FileExplorerEvents;
 import tv.danmaku.ijk.media.example.fragments.FileListFragment;
 
+/**
+ * 文件选择，app入口Activity
+ */
 public class FileExplorerActivity extends AppActivity {
     private Settings mSettings;
 
@@ -72,6 +75,11 @@ public class FileExplorerActivity extends AppActivity {
         FileExplorerEvents.getBus().unregister(this);
     }
 
+    /**
+     * UI入口，添加fragment
+     * @param path
+     * @param addToBackStack
+     */
     private void doOpenDirectory(String path, boolean addToBackStack) {
         Fragment newFragment = FileListFragment.newInstance(path);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();

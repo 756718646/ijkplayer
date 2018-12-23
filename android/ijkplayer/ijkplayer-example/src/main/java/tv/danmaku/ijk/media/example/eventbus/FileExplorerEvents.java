@@ -21,6 +21,9 @@ import com.squareup.otto.Bus;
 
 import java.io.File;
 
+/**
+ * 用于文件选择监听
+ */
 public class FileExplorerEvents {
     private static final Bus BUS = new Bus();
 

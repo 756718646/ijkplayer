@@ -23,6 +23,10 @@ import android.preference.PreferenceManager;
 
 import tv.danmaku.ijk.media.example.R;
 
+/**
+ * app设置，从sp中获取设置
+ * 目录等
+ */
 public class Settings {
     private Context mAppContext;
     private SharedPreferences mSharedPreferences;
