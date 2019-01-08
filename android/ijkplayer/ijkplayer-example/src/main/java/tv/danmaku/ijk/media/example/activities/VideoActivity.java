@@ -48,6 +48,9 @@ import tv.danmaku.ijk.media.example.widget.media.AndroidMediaController;
 import tv.danmaku.ijk.media.example.widget.media.IjkVideoView;
 import tv.danmaku.ijk.media.example.widget.media.MeasureHelper;
 
+/**
+ * 视频播放
+ */
 public class VideoActivity extends AppCompatActivity implements TracksFragment.ITrackHolder {
     private static final String TAG = "VideoActivity";
 
@@ -55,9 +58,9 @@ public class VideoActivity extends AppCompatActivity implements TracksFragment.I
     private Uri    mVideoUri;
 
     private AndroidMediaController mMediaController;
-    private IjkVideoView mVideoView;
+    private IjkVideoView mVideoView;//播放器
     private TextView mToastTextView;
-    private TableLayout mHudView;
+    private TableLayout mHudView;//用于显示日志数据
     private DrawerLayout mDrawerLayout;
     private ViewGroup mRightDrawer;
 
@@ -71,6 +74,12 @@ public class VideoActivity extends AppCompatActivity implements TracksFragment.I
         return intent;
     }
 
+    /**
+     * 页面跳转
+     * @param context
+     * @param videoPath 播放地址
+     * @param videoTitle 标题
+     */
     public static void intentTo(Context context, String videoPath, String videoTitle) {
         context.startActivity(newIntent(context, videoPath, videoTitle));
     }

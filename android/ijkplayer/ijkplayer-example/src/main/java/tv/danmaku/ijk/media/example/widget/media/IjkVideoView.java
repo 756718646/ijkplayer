@@ -243,6 +243,10 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         }
     }
 
+    /**
+     * 用于显示日志数据的
+     * @param tableLayout
+     */
     public void setHudView(TableLayout tableLayout) {
         mHudViewHolder = new InfoHudViewHolder(getContext(), tableLayout);
     }

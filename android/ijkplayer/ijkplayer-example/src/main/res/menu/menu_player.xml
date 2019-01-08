@@ -23,4 +23,8 @@
         android:id="@+id/action_show_tracks"
         android:title="@string/tracks"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/test"
+        android:title="test"
+        app:showAsAction="ifRoom" />
 </menu>
